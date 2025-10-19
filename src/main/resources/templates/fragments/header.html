@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <body>
 
@@ -7,7 +8,6 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container-fluid">
 
-                <!-- Título a la izquierda -->
                 <a class="navbar-brand" href="/">Biblioteca</a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -15,9 +15,10 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <!-- Enlaces a la derecha -->
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0" 
+                        sec:authorize="isAuthenticated()">
+                        
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/}">Inicio</a>
                         </li>
@@ -32,15 +33,31 @@
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 Préstamos
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="prestamosDropdown">
+                            <ul class="dropdown-menu" aria-labelledby="prestamosDropdown">
                                 <li><a class="dropdown-item" th:href="@{/prestamos}">Listar Préstamos</a></li>
                                 <li><a class="dropdown-item" th:href="@{/prestamos/nuevo}">Nuevo Préstamo</a></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li><a class="dropdown-item" th:href="@{/prestamos/reporte/vencidos}">Reporte
-                                        Vencidos</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" th:href="@{/prestamos/reporte/vencidos}">Reporte Vencidos</a></li>
                             </ul>
+                        </li>
+
+                        <li class="nav-item" 
+                            sec:authorize="hasRole('ADMINISTRADOR')">
+                            <a class="nav-link" th:href="@{/usuarios}">Mantenimiento Usuarios</a>
+                        </li>
+                    </ul>
+
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0" 
+                        sec:authorize="isAuthenticated()">
+                        <li class="nav-item">
+                            <span class="navbar-text me-3 text-white">
+                                Hola, <span sec:authentication="name"></span>
+                            </span>
+                            <form th:action="@{/perform_logout}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-outline-light btn-sm">
+                                    Cerrar Sesión
+                                </button>
+                            </form>
                         </li>
                     </ul>
                 </div>
@@ -49,5 +66,4 @@
     </div>
 
 </body>
-
 </html>

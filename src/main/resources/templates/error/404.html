@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Error 404 - Página No Encontrada</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .error-container {
+            max-width: 600px;
+            text-align: center;
+            padding: 40px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-dark p-5">
+
+    <div class="container">
+        <div class="error-container mx-auto">
+            <i class="bi bi-compass-fill text-primary" style="font-size: 6rem;"></i>
+            
+            <h1 class="display-4 fw-bold mt-3">Error 404</h1>
+            <h3 class="text-muted">Página No Encontrada</h3>
+            
+            <p class="lead mt-4">
+                La ruta a la que intentas acceder no existe.
+                <br>
+                <span id="redirectMessage"></span>
+                en <span id="countdown" class="fw-bold text-primary">5</span> segundos.
+            </p>
+            
+            <hr class="my-4">
+            
+            <a id="redirectLink" href="#" class="btn btn-primary">
+                Volver ahora
+            </a>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        
+        // Definimos las variables por defecto (para usuario NO logueado)
+        let redirectUrl = /*[[@{/login}]]*/ '/login';
+        let message = "Serás redirigido al login. (Debes iniciar sesión)";
+        let linkText = "Ir a Login";
+
+        // Usamos Spring Security para verificar si el usuario SÍ está logueado
+            // Si está autenticado, sobrescribimos las variables
+            redirectUrl = /*[[@{/}]]*/ '/';
+            message = "Serás redirigido al menú principal";
+            linkText = "Ir al Inicio";
+        
+        // Actualizamos el HTML con los mensajes correctos
+        document.getElementById('redirectMessage').innerText = message;
+        document.getElementById('redirectLink').href = redirectUrl;
+        document.getElementById('redirectLink').innerText = linkText;
+
+        let timeLeft = 5;
+        const countdownElement = document.getElementById('countdown');
+        
+        const timer = setInterval(() => {
+            timeLeft--;
+            countdownElement.innerText = timeLeft;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                // Redirigimos a la URL (sea / o /login)
+                window.location.href = redirectUrl;
+            }
+        }, 1000);
+        
+    </script>
+
+</body>
+
+</html>
