@@ -28,7 +28,7 @@ public class UsuarioService implements UserDetailsService {
     @Lazy
     private PasswordEncoder passwordEncoder;
 
-    // MÉTODOS DE UserDetailsService(PARA SPRING SECURITY)
+    // MÉTODOS DE UserDetailsService (PARA SPRING SECURITY)
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -49,6 +49,11 @@ public class UsuarioService implements UserDetailsService {
     // MÉTODOS PARA EL BLOQUEO DE CUENTAS
 
     public void increaseFailedAttempts(Usuario user) {
+        // El admin NUNCA se bloqueará.
+        if ("admin".equals(user.getUsername())) {
+            return;
+        }
+
         int newFailAttempts = user.getFailedAttempts() + 1;
         user.setFailedAttempts(newFailAttempts);
 
@@ -66,12 +71,18 @@ public class UsuarioService implements UserDetailsService {
     public void unlockAccount(Long id) {
         Usuario user = usuarioRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        // No permitimos desbloquear al admin (no es necesario, ya que no se bloquea)
+        if ("admin".equals(user.getUsername())) {
+             throw new SecurityException("La cuenta 'admin' no puede ser bloqueada ni desbloqueada.");
+        }
+        
         user.setAccountLocked(false);
         user.setFailedAttempts(0);
         usuarioRepository.save(user);
     }
 
-    // MÉTODOS CRUD (PARA MANTENIMIENTO)
+    // --- MÉTODOS CRUD (PARA MANTENIMIENTO) ---
     
     public List<Usuario> findAll() {
         return usuarioRepository.findAll();
@@ -86,15 +97,48 @@ public class UsuarioService implements UserDetailsService {
     }
 
     public Usuario save(Usuario usuario) {
-        // Encriptar contraseña solo si es nueva o se ha modificado
-        if (usuario.getId() == null || !usuario.getPassword().startsWith("$2a$")) {
-             usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+        
+        if (usuario.getId() != null) {             
+            Usuario usuarioExistente = usuarioRepository.findById(usuario.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+            // No permitimos que NADIE edite la cuenta 'admin' desde este formulario.
+            if ("admin".equals(usuarioExistente.getUsername())) {
+                throw new SecurityException("La cuenta 'admin' no puede ser modificada por este formulario.");
+            }
+            
+            // El controlador envía "********" si no se cambió la clave.
+            if (usuario.getPassword().equals("********") || usuario.getPassword().isEmpty()) {
+                // No se quiere cambiar la contraseña, mantenemos la antigua (encriptada)
+                usuario.setPassword(usuarioExistente.getPassword());
+            } else {
+                // Se escribió una nueva contraseña, la encriptamos
+                usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+            }
+
+            // Mantenemos el rol existente, ya que este formulario no debe cambiar roles.
+            usuario.setRole(usuarioExistente.getRole());
+
+        } else {
+            // ES UN USUARIO NUEVO
+            // Lógica de Contraseña
+            usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+            // Lógica de Rol (Forzamos Empleado)
+            usuario.setRole(Usuario.Role.ROLE_EMPLEADO);
         }
-        usuario.setRole(Usuario.Role.ROLE_EMPLEADO); // Solo permite crear empleados
+
         return usuarioRepository.save(usuario);
     }
 
     public void deleteById(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+            
+        // No permitimos que NADIE elimine la cuenta 'admin'.
+        if ("admin".equals(usuario.getUsername())) {
+            throw new SecurityException("No se puede eliminar la cuenta 'admin'.");
+        }
+
         usuarioRepository.deleteById(id);
     }
 }

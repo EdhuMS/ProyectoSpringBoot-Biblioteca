@@ -59,7 +59,7 @@
                     <td th:text="${socio.telefono}">555-1234</td>
                     <td th:text="${socio.email}">juan@ejemplo.com</td>
                     <td>
-                        <a th:href="@{/socios/editar/{id}(id=${socio.id})}" class="btn btn-warning btn-sm">Editar</a>
+                        <a th:href="@{/socios/editar/{id}(id=${socio.id})}" class="btn btn-outline-secondary btn-sm">Editar</a>
                         <a th:href="@{/socios/eliminar/{id}(id=${socio.id})}" class="btn btn-danger btn-sm" 
                            onclick="return confirm('¿Está seguro de eliminar a ' + ${socio.nombre} + '?');">Eliminar</a>
                     </td>

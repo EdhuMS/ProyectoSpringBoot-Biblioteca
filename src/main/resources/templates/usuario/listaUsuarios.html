@@ -54,7 +54,7 @@
                     <td th:text="${u.failedAttempts}">0</td>
                     <td>
                         <div th:if="${u.username != 'admin'}">
-                            <a th:href="@{/usuarios/editar/{id}(id=${u.id})}" class="btn btn-warning btn-sm">Editar</a>
+                            <a th:href="@{/usuarios/editar/{id}(id=${u.id})}" class="btn btn-outline-secondary btn-sm">Editar</a>
                             <a th:href="@{/usuarios/eliminar/{id}(id=${u.id})}" class="btn btn-danger btn-sm" 
                                onclick="return confirm('¿Está seguro?');">Eliminar</a>
                             
