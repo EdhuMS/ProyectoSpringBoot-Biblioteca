@@ -2,22 +2,21 @@ package com.proyecto.sistemagestionbiblioteca;
 
 import com.proyecto.sistemagestionbiblioteca.model.Usuario;
 import com.proyecto.sistemagestionbiblioteca.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
+        
         // Crear usuario ADMIN por defecto si no existe
         if (usuarioRepository.findByUsername("admin").isEmpty()) {
             Usuario admin = new Usuario();
@@ -28,6 +27,20 @@ public class DataInitializer implements CommandLineRunner {
             admin.setAccountLocked(false);
             admin.setFailedAttempts(0);
             usuarioRepository.save(admin);
+            System.out.println("--> Usuario ADMIN creado: admin / Admin@123");
+        }
+
+        // Crear usuario EMPLEADO "Pepe" si no existe
+        if (usuarioRepository.findByUsername("pepe").isEmpty()) {
+            Usuario pepe = new Usuario();
+            pepe.setUsername("pepe");
+            // Contraseña 'Pepe@123' encriptada
+            pepe.setPassword(passwordEncoder.encode("Pepe@123"));
+            pepe.setRole(Usuario.Role.ROLE_EMPLEADO);
+            pepe.setAccountLocked(false);
+            pepe.setFailedAttempts(0);
+            usuarioRepository.save(pepe);
+            System.out.println("--> Usuario EMPLEADO creado: pepe / Pepe@123");
         }
     }
 }

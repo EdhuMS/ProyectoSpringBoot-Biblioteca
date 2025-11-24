@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+    <div th:fragment="confirm">
+        
+        <div class="modal fade" id="genericModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-gradient text-white" id="modalHeader">
+                        <h5 class="modal-title" id="modalLabel">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirmación
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <p class="lead mb-0" id="modalMessage">¿Estás seguro de realizar esta acción?</p>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <a href="#" id="btnConfirmAction" class="btn btn-danger px-4">Sí, confirmar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var genericModal = document.getElementById('genericModal');
+                
+                genericModal.addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget;
+                    
+                    var url = button.getAttribute('data-url');
+                    var message = button.getAttribute('data-message');
+                    var type = button.getAttribute('data-type') || 'danger'; 
+                    
+                    var modalMessage = genericModal.querySelector('#modalMessage');
+                    var confirmBtn = genericModal.querySelector('#btnConfirmAction');
+                    var modalHeader = genericModal.querySelector('#modalHeader');
+
+                    modalMessage.textContent = message;
+                    confirmBtn.setAttribute('href', url);
+
+                    confirmBtn.className = 'btn px-4 btn-' + type;
+                    
+                    modalHeader.className = 'modal-header text-white';
+                    if(type === 'danger') modalHeader.classList.add('bg-danger');
+                    else if(type === 'warning') modalHeader.classList.add('bg-warning');
+                    else modalHeader.classList.add('bg-primary');
+                });
+            });
+        </script>
+    </div>
+
+</body>
+</html>

@@ -1,9 +1,9 @@
 package com.proyecto.sistemagestionbiblioteca.controller;
 
+import com.proyecto.sistemagestionbiblioteca.dto.UsuarioDTO;
 import com.proyecto.sistemagestionbiblioteca.model.Usuario;
 import com.proyecto.sistemagestionbiblioteca.service.UsuarioService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -11,13 +11,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/usuarios")
+@RequiredArgsConstructor
 public class UsuarioController {
 
-    @Autowired
-    private UsuarioService usuarioService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UsuarioService usuarioService;
 
     @GetMapping
     public String listarUsuarios(Model model) {
@@ -27,44 +24,42 @@ public class UsuarioController {
 
     @GetMapping("/nuevo")
     public String mostrarFormulario(Model model) {
-        model.addAttribute("usuario", new Usuario());
+        model.addAttribute("usuarioDTO", new UsuarioDTO());
         model.addAttribute("titulo", "Registrar Nuevo Empleado");
         return "usuario/formularioUsuario";
     }
 
     @PostMapping("/guardar")
-    public String guardarUsuario(@ModelAttribute Usuario usuario, RedirectAttributes attributes) {
-        try {
-            // El UsuarioService ya se encarga de hashear la clave y de asignar el ROL_EMPLEADO por defecto.
-            usuarioService.save(usuario);
-            attributes.addFlashAttribute("success", "Empleado guardado con éxito.");
-        } catch (Exception e) {
-            attributes.addFlashAttribute("error", "Error al guardar el empleado: " + e.getMessage());
-        }
+    public String guardarUsuario(@ModelAttribute UsuarioDTO usuarioDTO, RedirectAttributes attributes) {
+        Usuario usuario = new Usuario();
+        usuario.setId(usuarioDTO.getId());
+        usuario.setUsername(usuarioDTO.getUsername());
+        usuario.setPassword(usuarioDTO.getPassword());
+        usuarioService.save(usuario);
+        
+        attributes.addFlashAttribute("success", "Empleado guardado con éxito.");
         return "redirect:/usuarios";
     }
 
     @GetMapping("/editar/{id}")
-    public String mostrarFormularioEdicion(@PathVariable Long id, Model model, RedirectAttributes attributes) {
-        return usuarioService.findById(id).map(usuario -> {
-            usuario.setPassword("********"); 
-            model.addAttribute("usuario", usuario);
-            model.addAttribute("titulo", "Editar Empleado");
-            return "usuario/formularioUsuario";
-        }).orElseGet(() -> {
-            attributes.addFlashAttribute("error", "Empleado no encontrado.");
-            return "redirect:/usuarios";
-        });
+    public String mostrarFormularioEdicion(@PathVariable Long id, Model model) {
+        Usuario usuario = usuarioService.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Empleado no encontrado."));
+        
+        UsuarioDTO dto = new UsuarioDTO();
+        dto.setId(usuario.getId());
+        dto.setUsername(usuario.getUsername());
+        dto.setPassword("********");
+        
+        model.addAttribute("usuarioDTO", dto);
+        model.addAttribute("titulo", "Editar Empleado");
+        return "usuario/formularioUsuario";
     }
 
     @GetMapping("/eliminar/{id}")
     public String eliminarUsuario(@PathVariable Long id, RedirectAttributes attributes) {
-        try {
-            usuarioService.deleteById(id);
-            attributes.addFlashAttribute("warning", "Empleado eliminado.");
-        } catch (Exception e) {
-            attributes.addFlashAttribute("error", "No se puede eliminar el empleado.");
-        }
+        usuarioService.deleteById(id);
+        attributes.addFlashAttribute("warning", "Empleado eliminado.");
         return "redirect:/usuarios";
     }
     

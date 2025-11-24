@@ -2,8 +2,7 @@ package com.proyecto.sistemagestionbiblioteca.service;
 
 import com.proyecto.sistemagestionbiblioteca.model.Usuario;
 import com.proyecto.sistemagestionbiblioteca.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,18 +16,15 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor 
 public class UsuarioService implements UserDetailsService {
 
     public static final int MAX_FAILED_ATTEMPTS = 5;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    @Lazy
-    private PasswordEncoder passwordEncoder;
-
-    // MÉTODOS DE UserDetailsService (PARA SPRING SECURITY)
+    // MÉTODOS DE UserDetailsService
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -38,10 +34,8 @@ public class UsuarioService implements UserDetailsService {
         return new User(
                 usuario.getUsername(),
                 usuario.getPassword(),
-                !usuario.isAccountLocked(), // enabled (si no está bloqueado)
-                true, // accountNonExpired
-                true, // credentialsNonExpired
-                true, // accountNonLocked
+                !usuario.isAccountLocked(),
+                true, true, true,
                 Collections.singletonList(new SimpleGrantedAuthority(usuario.getRole().name()))
         );
     }
@@ -72,7 +66,6 @@ public class UsuarioService implements UserDetailsService {
         Usuario user = usuarioRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         
-        // No permitimos desbloquear al admin (no es necesario, ya que no se bloquea)
         if ("admin".equals(user.getUsername())) {
              throw new SecurityException("La cuenta 'admin' no puede ser bloqueada ni desbloqueada.");
         }
@@ -82,7 +75,7 @@ public class UsuarioService implements UserDetailsService {
         usuarioRepository.save(user);
     }
 
-    // --- MÉTODOS CRUD (PARA MANTENIMIENTO) ---
+    // --- MÉTODOS CRUD ---
     
     public List<Usuario> findAll() {
         return usuarioRepository.findAll();
@@ -97,33 +90,23 @@ public class UsuarioService implements UserDetailsService {
     }
 
     public Usuario save(Usuario usuario) {
-        
         if (usuario.getId() != null) {             
             Usuario usuarioExistente = usuarioRepository.findById(usuario.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-            // No permitimos que NADIE edite la cuenta 'admin' desde este formulario.
             if ("admin".equals(usuarioExistente.getUsername())) {
-                throw new SecurityException("La cuenta 'admin' no puede ser modificada por este formulario.");
+                throw new SecurityException("La cuenta 'admin' no puede ser modificada.");
             }
             
-            // El controlador envía "********" si no se cambió la clave.
             if (usuario.getPassword().equals("********") || usuario.getPassword().isEmpty()) {
-                // No se quiere cambiar la contraseña, mantenemos la antigua (encriptada)
                 usuario.setPassword(usuarioExistente.getPassword());
             } else {
-                // Se escribió una nueva contraseña, la encriptamos
                 usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
             }
-
-            // Mantenemos el rol existente, ya que este formulario no debe cambiar roles.
             usuario.setRole(usuarioExistente.getRole());
 
         } else {
-            // ES UN USUARIO NUEVO
-            // Lógica de Contraseña
             usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-            // Lógica de Rol (Forzamos Empleado)
             usuario.setRole(Usuario.Role.ROLE_EMPLEADO);
         }
 

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+    <div th:fragment="search(ruta, keyword, placeholder)">
+        <form th:action="@{${ruta}}" method="get" class="row g-3 mb-3 align-items-center">
+            <div class="col-auto flex-grow-1">
+                <div class="input-group">
+                    <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="keyword" class="form-control border-start-0" 
+                           th:value="${keyword}" 
+                           th:placeholder="${placeholder}" aria-label="Buscar">
+                </div>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Buscar</button>
+                <a th:if="${keyword != null && keyword != ''}" th:href="@{${ruta}}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div th:fragment="menu(ruta, page, keyword)">
+        <nav th:if="${page.totalPages > 1}" aria-label="Paginación" class="mt-4">
+            <ul class="pagination justify-content-center">
+                
+                <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                    <a class="page-link" th:href="@{${ruta}(page=${page.number - 1}, keyword=${keyword})}">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </a>
+                </li>
+
+                <li class="page-item disabled">
+                    <span class="page-link text-dark bg-light border-0 mx-2">
+                        Página <strong th:text="${page.number + 1}"></strong> de <span th:text="${page.totalPages}"></span>
+                    </span>
+                </li>
+
+                <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                    <a class="page-link" th:href="@{${ruta}(page=${page.number + 1}, keyword=${keyword})}">
+                        Siguiente <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div th:if="${page.empty}" class="alert alert-info text-center mt-3">
+            <i class="bi bi-info-circle me-2"></i> No se encontraron registros.
+        </div>
+    </div>
+
+</body>
+</html>

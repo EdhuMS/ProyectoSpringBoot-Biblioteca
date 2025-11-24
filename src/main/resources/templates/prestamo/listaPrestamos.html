@@ -3,88 +3,113 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Lista de Préstamos</title>
+    <title>Gestión de Préstamos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
     <div th:replace="fragments/header :: navbar"></div>
-    
+
     <div class="container mt-4">
-        <h2 class="mb-4 text-success">Gestión de Préstamos</h2>
+        <h2 class="mb-4 text-success">Control de Préstamos</h2>
 
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert"><span
-                th:text="${success}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"
-                aria-label="Close"></button></div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert"><span
-                th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"
-                aria-label="Close"></button></div>
-        <div th:if="${warning}" class="alert alert-warning alert-dismissible fade show" role="alert"><span
-                th:text="${warning}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"
-                aria-label="Close"></button></div>
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
 
-        <div class="mb-3 d-flex justify-content-between">
-            <div>
-                <a th:href="@{/prestamos/nuevo}" class="btn btn-success me-2">
-                    <i class="bi bi-plus-circle-fill"></i> Registrar Nuevo Préstamo
-                </a>
-            </div>
-            <div>
-                <a th:href="@{/prestamos/reporte/vencidos}" class="btn btn-danger">
-                    <i class="bi bi-exclamation-triangle-fill"></i> Ver Reporte Vencidos
-                </a>
-            </div>
+        <div class="mb-3 d-flex justify-content-between flex-wrap">
+            <a th:href="@{/prestamos/nuevo}" class="btn btn-success mb-2">
+                <i class="bi bi-cart-plus-fill"></i> Nuevo Préstamo
+            </a>
+
+            <a th:href="@{/prestamos/reporte/vencidos}" class="btn btn-outline-danger mb-2">
+                <i class="bi bi-exclamation-triangle-fill"></i> Ver Reporte Vencidos
+            </a>
+        </div>
+
+        <div
+            th:replace="fragments/paginator :: search(ruta='/prestamos', keyword=${keyword}, placeholder='Buscar por Socio o Libro...')">
         </div>
 
         <div class="table-responsive">
-            <table class="table table-striped table-hover table-bordered">
+            <table class="table table-striped table-hover table-bordered align-middle">
                 <thead class="table-dark">
                     <tr>
                         <th>ID</th>
                         <th>Socio</th>
-                        <th>Libro (ISBN)</th>
+                        <th>Libro</th>
                         <th>F. Préstamo</th>
-                        <th>F. Esperada</th>
-                        <th>F. Real</th>
-                        <th>Multa ($)</th>
+                        <th>F. Límite</th>
+                        <th>Multa</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="p : ${prestamos}">
+                    <tr th:each="p : ${page.content}">
                         <td th:text="${p.id}">1</td>
-                        <td th:text="${p.socio.nombre}">Socio X</td>
-                        <td th:text="${p.libro.titulo + ' (' + p.libro.isbn + ')'}">Libro Y</td>
-                        <td th:text="${p.fechaPrestamo}">2025-10-01</td>
-                        <td th:text="${p.fechaDevolucionEsperada}">2025-10-08</td>
-                        <td th:text="${p.fechaDevolucionReal ?: 'N/A'}"></td>
+
+                        <td>
+                            <i class="bi bi-person-circle text-muted"></i>
+                            <span th:text="${p.socio.nombre}">Socio X</span>
+                        </td>
+
+                        <td>
+                            <i class="bi bi-book text-muted"></i>
+                            <span th:text="${p.libro.titulo}">Libro Y</span>
+                        </td>
+
+                        <td th:text="${p.fechaPrestamo}">2025-01-01</td>
+
+                        <td th:classappend="${p.fechaDevolucionReal == null && p.fechaDevolucionEsperada.isBefore(T(java.time.LocalDate).now())} ? 'text-danger fw-bold' : ''"
+                            th:text="${p.fechaDevolucionEsperada}">
+                            2025-01-08
+                        </td>
+
                         <td th:text="${p.montoMulta != null ? 'S/' + #numbers.formatDecimal(p.montoMulta, 0, 2) : '-'}">
+                            -</td>
+
+                        <td>
+                            <span th:if="${p.fechaDevolucionReal == null}" class="badge"
+                                th:classappend="${p.fechaDevolucionEsperada.isBefore(T(java.time.LocalDate).now()) ? 'bg-danger' : 'bg-primary'}">
+                                <i class="bi bi-clock-history"></i>
+                                <span
+                                    th:text="${p.fechaDevolucionEsperada.isBefore(T(java.time.LocalDate).now()) ? 'VENCIDO' : 'ACTIVO'}"></span>
+                            </span>
+
+                            <span th:if="${p.fechaDevolucionReal != null}" class="badge bg-success">
+                                <i class="bi bi-check-circle"></i> DEVUELTO
+                            </span>
                         </td>
 
                         <td>
-                            <span th:if="${p.fechaDevolucionReal == null}" class="badge bg-primary">ACTIVO</span>
-                            <span th:if="${p.fechaDevolucionReal != null}" class="badge bg-success">DEVUELTO</span>
-                        </td>
-
-                        <td>
-                            <a th:if="${p.fechaDevolucionReal == null}"
-                                th:href="@{/prestamos/devolver/{id}(id=${p.id})}" class="btn btn-warning btn-sm"
-                                onclick="return confirm('¿Confirma la devolución de este libro?');">
-                                Devolver
-                            </a>
+                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#genericModal" th:data-url="@{/prestamos/devolver/{id}(id=${p.id})}"
+                                th:data-message="'¿Confirmar la devolución del libro prestado a ' + ${p.socio.nombre} + '?'"
+                                data-type="warning" title="Registrar Devolución">
+                                <i class="bi bi-box-arrow-in-down-left"></i>
+                            </button>
 
                             <a th:if="${p.fechaDevolucionReal != null}"
-                                th:href="@{/prestamos/comprobante/{id}(id=${p.id})}"
-                                class="btn btn-secondary btn-sm text-white">
-                                Ticket
+                                th:href="@{/prestamos/comprobante/{id}(id=${p.id})}" class="btn btn-secondary btn-sm"
+                                title="Ver Comprobante">
+                                <i class="bi bi-receipt"></i>
                             </a>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
+
+        <div th:replace="fragments/paginator :: menu(ruta='/prestamos', page=${page}, keyword=${keyword})"></div>
     </div>
+
+    <div th:replace="fragments/modal :: confirm"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

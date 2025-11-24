@@ -26,12 +26,12 @@
 
     <div class="mb-3">
         <a th:href="@{/usuarios/nuevo}" class="btn btn-primary">
-            Registrar Nuevo Empleado
+            <i class="bi bi-person-plus-fill"></i> Registrar Nuevo Empleado
         </a>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-striped table-hover table-bordered">
+        <table class="table table-striped table-hover table-bordered align-middle">
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
@@ -46,24 +46,44 @@
                 <tr th:each="u : ${usuarios}" th:classappend="${u.username == 'admin'} ? 'table-secondary' : ''">
                     <td th:text="${u.id}">1</td>
                     <td th:text="${u.username}">admin</td>
-                    <td th:text="${u.role.name() == 'ROLE_ADMINISTRADOR' ? 'Administrador' : 'Empleado'}">Rol</td>
                     <td>
-                        <span th:if="${u.accountLocked}" class="badge bg-danger">BLOQUEADO</span>
+                        <span th:if="${u.role.name() == 'ROLE_ADMINISTRADOR'}" class="badge bg-danger">ADMINISTRADOR</span>
+                        <span th:if="${u.role.name() == 'ROLE_EMPLEADO'}" class="badge bg-primary">EMPLEADO</span>
+                    </td>
+                    <td>
+                        <span th:if="${u.accountLocked}" class="badge bg-danger">
+                            <i class="bi bi-lock-fill"></i> BLOQUEADO
+                        </span>
                         <span th:unless="${u.accountLocked}" class="badge bg-success">ACTIVO</span>
                     </td>
                     <td th:text="${u.failedAttempts}">0</td>
                     <td>
-                        <div th:if="${u.username != 'admin'}">
-                            <a th:href="@{/usuarios/editar/{id}(id=${u.id})}" class="btn btn-outline-secondary btn-sm">Editar</a>
-                            <a th:href="@{/usuarios/eliminar/{id}(id=${u.id})}" class="btn btn-danger btn-sm" 
-                               onclick="return confirm('¿Está seguro?');">Eliminar</a>
+                        <div th:if="${u.username != 'admin'}" class="btn-group" role="group">
                             
-                            <a th:if="${u.accountLocked}"
-                               th:href="@{/usuarios/desbloquear/{id}(id=${u.id})}" 
-                               class="btn btn-success btn-sm"
-                               onclick="return confirm('¿Desbloquear a ' + ${u.username} + '?');">
-                                Desbloquear
+                            <a th:href="@{/usuarios/editar/{id}(id=${u.id})}" class="btn btn-outline-secondary btn-sm" title="Editar">
+                                <i class="bi bi-pencil-square"></i>
                             </a>
+                            
+                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#genericModal" 
+                                    th:data-url="@{/usuarios/eliminar/{id}(id=${u.id})}"
+                                    th:data-message="'¿Está seguro de eliminar definitivamente al empleado ' + ${u.username} + '?'"
+                                    data-type="danger"
+                                    title="Eliminar">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                            
+                            <button th:if="${u.accountLocked}"
+                                    type="button" class="btn btn-success btn-sm ms-1"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#genericModal"
+                                    th:data-url="@{/usuarios/desbloquear/{id}(id=${u.id})}"
+                                    th:data-message="'¿Confirmar el desbloqueo de la cuenta de ' + ${u.username} + '?'"
+                                    data-type="success"
+                                    title="Desbloquear Cuenta">
+                                <i class="bi bi-unlock-fill"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -71,6 +91,8 @@
         </table>
     </div>
 </div>
+
+<div th:replace="fragments/modal :: confirm"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

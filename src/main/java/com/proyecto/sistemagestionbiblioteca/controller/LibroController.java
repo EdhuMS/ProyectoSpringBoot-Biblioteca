@@ -2,7 +2,10 @@ package com.proyecto.sistemagestionbiblioteca.controller;
 
 import com.proyecto.sistemagestionbiblioteca.model.Libro;
 import com.proyecto.sistemagestionbiblioteca.service.LibroService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -10,14 +13,23 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/libros")
+@RequiredArgsConstructor
 public class LibroController {
 
-    @Autowired
-    private LibroService libroService;
+    private final LibroService libroService;
 
     @GetMapping
-    public String listarLibros(Model model) {
-        model.addAttribute("libros", libroService.findAll());
+    public String listarLibros(Model model, 
+                               @RequestParam(defaultValue = "0") int page,
+                               @RequestParam(defaultValue = "") String keyword) {
+        
+        PageRequest pageable = PageRequest.of(page, 20, Sort.by("id").ascending());
+        
+        Page<Libro> pageLibros = libroService.buscarTodos(keyword, pageable);
+
+        model.addAttribute("page", pageLibros);     // Objeto Page con los datos
+        model.addAttribute("keyword", keyword);     // Para mantener el texto en el buscador
+        
         return "libro/listaLibros";
     }
 
@@ -30,35 +42,25 @@ public class LibroController {
 
     @PostMapping("/guardar")
     public String guardarLibro(@ModelAttribute Libro libro, RedirectAttributes attributes) {
-        try {
-            libroService.save(libro);
-            attributes.addFlashAttribute("success", "Libro guardado con éxito.");
-        } catch (Exception e) {
-            attributes.addFlashAttribute("error", "Error al guardar el libro: " + e.getMessage());
-        }
+        libroService.save(libro);
+        attributes.addFlashAttribute("success", "Libro guardado con éxito.");
         return "redirect:/libros";
     }
 
     @GetMapping("/editar/{id}")
-    public String mostrarFormularioEdicion(@PathVariable Long id, Model model, RedirectAttributes attributes) {
-        return libroService.findById(id).map(libro -> {
-            model.addAttribute("libro", libro);
-            model.addAttribute("titulo", "Editar Libro");
-            return "libro/formularioLibro";
-        }).orElseGet(() -> {
-            attributes.addFlashAttribute("error", "Libro no encontrado.");
-            return "redirect:/libros";
-        });
+    public String mostrarFormularioEdicion(@PathVariable Long id, Model model) {
+        Libro libro = libroService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Libro no encontrado."));
+        
+        model.addAttribute("libro", libro);
+        model.addAttribute("titulo", "Editar Libro");
+        return "libro/formularioLibro";
     }
 
     @GetMapping("/eliminar/{id}")
     public String eliminarLibro(@PathVariable Long id, RedirectAttributes attributes) {
-        try {
-            libroService.deleteById(id);
-            attributes.addFlashAttribute("warning", "Libro eliminado.");
-        } catch (Exception e) {
-            attributes.addFlashAttribute("error", "No se puede eliminar el libro. Verifique que no esté prestado.");
-        }
+        libroService.deleteById(id);
+        attributes.addFlashAttribute("warning", "Libro eliminado.");
         return "redirect:/libros";
     }
 }

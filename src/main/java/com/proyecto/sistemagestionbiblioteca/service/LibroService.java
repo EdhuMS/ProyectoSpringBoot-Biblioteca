@@ -2,22 +2,34 @@ package com.proyecto.sistemagestionbiblioteca.service;
 
 import com.proyecto.sistemagestionbiblioteca.model.Libro;
 import com.proyecto.sistemagestionbiblioteca.repository.LibroRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class LibroService {
 
-    @Autowired
-    private LibroRepository libroRepository;
+    private final LibroRepository libroRepository;
 
+    // --- BÚSQUEDA Y PAGINACIÓN ---
+    public Page<Libro> buscarTodos(String keyword, Pageable pageable) {
+        if (keyword != null && !keyword.isEmpty()) {
+            return libroRepository.findByTituloContainingIgnoreCaseOrAutorContainingIgnoreCase(keyword, keyword, pageable);
+        }
+        return libroRepository.findAll(pageable);
+    }
+    
+    // Método para llenar combos (selects) sin paginar
     public List<Libro> findAll() {
         return libroRepository.findAll();
     }
 
+    // --- CRUD ---
     public Optional<Libro> findById(Long id) {
         return libroRepository.findById(id);
     }
@@ -30,15 +42,10 @@ public class LibroService {
         libroRepository.deleteById(id);
     }
 
-    /**
-     * Lógica clave: Disminuye la cantidad disponible después de un préstamo.
-     * @param libroId ID del libro prestado.
-     * @param cantidad Cantidad a disminuir.
-     * @throws IllegalStateException si no hay stock disponible.
-     */
+    // --- LÓGICA DE STOCK ---
     public void disminuirStock(Long libroId, int cantidad) {
         Libro libro = libroRepository.findById(libroId)
-                                     .orElseThrow(() -> new IllegalArgumentException("Libro no encontrado."));
+                .orElseThrow(() -> new IllegalArgumentException("Libro no encontrado."));
 
         if (libro.getCantidadDisponible() >= cantidad) {
             libro.setCantidadDisponible(libro.getCantidadDisponible() - cantidad);
@@ -48,14 +55,9 @@ public class LibroService {
         }
     }
 
-    /**
-     * Lógica clave: Aumenta la cantidad disponible después de una devolución.
-     * @param libroId ID del libro devuelto.
-     * @param cantidad Cantidad a aumentar.
-     */
     public void aumentarStock(Long libroId, int cantidad) {
         Libro libro = libroRepository.findById(libroId)
-                                     .orElseThrow(() -> new IllegalArgumentException("Libro no encontrado."));
+                .orElseThrow(() -> new IllegalArgumentException("Libro no encontrado."));
 
         libro.setCantidadDisponible(libro.getCantidadDisponible() + cantidad);
         libroRepository.save(libro);

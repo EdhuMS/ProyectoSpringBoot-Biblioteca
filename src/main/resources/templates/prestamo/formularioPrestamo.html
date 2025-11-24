@@ -13,12 +13,12 @@
     <div class="container mt-4">
         <h2 class="mb-4 text-success">Registrar Nuevo Préstamo</h2>
 
-        <form th:action="@{/prestamos/guardar}" th:object="${prestamo}" method="post">
+        <form th:action="@{/prestamos/guardar}" th:object="${prestamoDTO}" method="post">
 
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="socio" class="form-label">Socio:</label>
-                    <select id="socio" class="form-select" th:field="*{socio}" required>
+                    <select id="socio" class="form-select" th:field="*{socioId}" required>
                         <option value="">-- Seleccione un Socio --</option>
                         <option th:each="socio : ${socios}" th:value="${socio.id}"
                             th:text="${socio.nombre + ' (' + socio.identificacion + ')'}">
@@ -29,7 +29,7 @@
 
                 <div class="col-md-6 mb-3">
                     <label for="libro" class="form-label">Libro a Prestar:</label>
-                    <select id="libro" class="form-select" th:field="*{libro}" required>
+                    <select id="libro" class="form-select" th:field="*{libroId}" required>
                         <option value="">-- Seleccione un Libro --</option>
                         <option th:each="libro : ${libros}" th:value="${libro.id}"
                             th:text="${libro.titulo + ' (' + libro.cantidadDisponible + ' disponibles)'}">
