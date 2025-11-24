@@ -88,9 +88,4 @@ El sistema crea automáticamente estos usuarios al arrancar por primera vez:
 
 ---
 
-## 📸 Capturas de Pantalla
-*(Puedes agregar aquí imágenes de tu Login moderno o del Dashboard)*
-
----
-
 **Desarrollado con ❤️ usando Spring Boot**

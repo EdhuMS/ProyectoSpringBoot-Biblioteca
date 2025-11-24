@@ -38,17 +38,29 @@ public class PrestamoService {
 
     // --- TRANSACCIONES PRINCIPALES ---
 
-    @Transactional // Si falla algo al guardar, se revierte la bajada de stock
+    @Transactional
     public Prestamo realizarPrestamo(Prestamo nuevoPrestamo, Long libroId) {
-        // Validar y Disminuir el Stock
+        Long socioId = nuevoPrestamo.getSocio().getId();
+
+        // Verificar si es Moroso (Tiene vencidos)
+        boolean esMoroso = prestamoRepository.existsBySocioIdAndFechaDevolucionRealIsNullAndFechaDevolucionEsperadaBefore(socioId, LocalDate.now());
+        if (esMoroso) {
+            throw new IllegalStateException("El socio tiene préstamos vencidos pendientes. No puede retirar más libros.");
+        }
+
+        // Límite de 2 préstamos simultáneos
+        long prestamosActivos = prestamoRepository.countBySocioIdAndFechaDevolucionRealIsNull(socioId);
+        if (prestamosActivos >= 2) {
+            throw new IllegalStateException("El socio ya alcanzó el límite de 2 préstamos activos.");
+        }
+
+        // Validar y Disminuir el Stock (Lo que ya tenías)
         libroService.disminuirStock(libroId, 1); 
 
-        // Calcular fecha
         if (nuevoPrestamo.getFechaDevolucionEsperada() == null) {
             nuevoPrestamo.setFechaDevolucionEsperada(LocalDate.now().plusDays(7));
         }
         
-        // Guardar
         return prestamoRepository.save(nuevoPrestamo);
     }
 

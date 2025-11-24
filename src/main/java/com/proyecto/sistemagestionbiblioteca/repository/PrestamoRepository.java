@@ -22,5 +22,7 @@ public interface PrestamoRepository extends JpaRepository<Prestamo, Long> {
     // Para reportes
     List<Prestamo> findByFechaDevolucionEsperadaBeforeAndFechaDevolucionRealIsNull(LocalDate hoy);
     
-    List<Prestamo> findBySocioIdAndFechaDevolucionRealIsNull(Long socioId);
+    long countBySocioIdAndFechaDevolucionRealIsNull(Long socioId);
+
+    boolean existsBySocioIdAndFechaDevolucionRealIsNullAndFechaDevolucionEsperadaBefore(Long socioId, LocalDate fecha);
 }
