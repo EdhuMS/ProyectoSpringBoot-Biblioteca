@@ -88,4 +88,8 @@ El sistema crea automáticamente estos usuarios al arrancar por primera vez:
 
 ---
 
+<<<<<<< HEAD
 **Desarrollado con ❤️ usando Spring Boot**
+=======
+**Desarrollado con ❤️ usando Spring Boot**
+>>>>>>> c99bb063349a9f73d674d587f7967e5930081c8a
